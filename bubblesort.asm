@@ -1,9 +1,11 @@
 ; Bubblesorting of ten-elements array
 ; KVIPE
 ; 01-2019
-.ORIG x3000
 
-;Greet user
+; R0 uses as the argument to PUTSYMB subroutine
+
+.ORIG x3000
+; Greeting
 LEA R0, Greeting0
 PUTS
 LD R0, NEWLINE
@@ -11,62 +13,59 @@ JSR PUTSYMB
 LEA R0, Greeting1
 PUTS
 ;
-;Fill the 10-elements array
+; Array Filing
 AND R1, R1, #0
 ADD R1, R1, #10 ; R1 <- #10 (loop counter)
-LD R2, CHAR0 ; R2 <- ASCII 1 (elements counter) 
-LEA R4, ARRELEM0 ; Pointer to 0-element of array
-;
-FILLING LD R0, NEWLINE
+LD R2, CHAR0 ; ASCII char of current array index
+LEA R4, ARRELEM0 ; Pointer of array zero-element
+
+FILLING LD R0, NEWLINE ; filling loop
 JSR PUTSYMB
 LEA R0, Prompt
 PUTS
 AND R0, R0, #0
-ADD R0, R0, R2 ; R0 <- R2 (for output elements counter to console)
+ADD R0, R0, R2
 JSR PUTSYMB
 LD R0, PROMPTSYMB
 JSR PUTSYMB
-ST R1, SaveR1
-LEA R7, #2 ; PC Marker after INPDIGIT subroutine
-ST R7, SaveR7 ; Save PC
+ST R1, SaveR1 ; INPDIGIT uses R1, R7 and changes them
+LEA R7, #2 
+ST R7, SaveR7
 JSR INPDIGIT
-LD R1, SaveR1 ; Restore R1 after INPDIGIT subroutine
-STR R0, R4, #0 ; Store entered digit in respectevely memory cell
+LD R1, SaveR1 ; Restore R1
+STR R0, R4, #0 ; Store entered digit in the memory cell
 ADD R4, R4, #1
-ADD R2, R2, #1 ; R2 <- R2+1 (next digit char)
-ADD R1, R1, #-1 ; R1 <- R1-1
+ADD R2, R2, #1 ; Next array index ASCII char
+ADD R1, R1, #-1 ; Decrease loop counter by 1
 BRnp FILLING
 ;
-;Sort array
-;R0 as arr[i-1], R1 as arr[i]
+; Array sorting
+; R0 ~ arr[i-1], R1 ~ arr[i] (high level PL analogy)
 SORTING LEA R0, ARRELEM0
 LEA R1, ARRELEM1
 AND R2, R2, #0
-ADD R2, R2, #9 ; Counter
+ADD R2, R2, #9 ; Loop counter. If we start with 1 (not 0) element it requires 9 iterations
 AND R6, R6, #0
 
 ARRLOOP LDR R3, R0, #0
-;R3, R4 - values, R5 - result of compare, R6 - flag
+; R3, R4 - values, R5 - result of compare, R6 - flag if the exchange was made
 LDR R4, R1, #0
-;R5 <- R3-R4
 NOT R5, R4
 ADD R5, R5, #1
 ADD R5, R3, R5 
 BRnz #4
-;flag=true
 AND R6, R6, #0
 ADD R6, R6, #1
-;swapping (mem[r1]=r3, rmem[r0]=r4)
+; Exchange (mem[r1]=r3, mem[r0]=r4)
 STR R3, R1, #0
 STR R4, R0, #0
 
-;R0+1, R1+1
 ADD R0, R0, #1
 ADD R1, R1, #1
-;counter--
+; Decrease counter by 1
 ADD R2, R2, #-1
 BRp ARRLOOP
-;IF swapped
+; if the exchange was made
 ADD R6, R6, #0
 BRp SORTING
 ;
@@ -93,8 +92,8 @@ HALT
 ;SUBROUTINES
 
 ;Print one symbol
-;R0 - Input arg
-;R3 - Need to restore
+;R0 is input argument
+;R3 need to restore
 PUTSYMB LDI R3, DSR
 BRzp PUTSYMB
 STI R0, DDR
@@ -102,7 +101,7 @@ RET
 ;
 
 ;Input digit
-;R1, R3 - need to restore
+;R1, R3 need to restore
 INPDIGIT GETC
 AND R1, R1, #0
 ADD R1, R1, R0
